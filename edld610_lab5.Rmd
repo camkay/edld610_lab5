@@ -11,6 +11,7 @@ library(tidyverse)
 library(magrittr)
 library(rio)
 library(here)
+library(gghighlight)
 
 # import and tidy column names
 states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
@@ -46,6 +47,12 @@ ggplot(cam_data, aes(x = avg_revenue, y = avg_score)) +
   geom_point() +
   facet_wrap(~content) +
   theme_minimal()
+
+# improve plot
+ggplot(cam_data, aes(x = avg_revenue, y = avg_score)) +
+  geom_point() +
+  facet_wrap(~content) +
+  theme_bw()
 
 
 ```
