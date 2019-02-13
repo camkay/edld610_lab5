@@ -23,5 +23,21 @@ states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
 ```
 
 ```{r part2_cam}
+# prepare data
+states_data %>%
+  mutate(rev_enr = total_revenue / enroll,
+         math_score = (avg_math_4_score + avg_math_8_score) / 2,
+         reading_score = (avg_reading_4_score + avg_reading_8_score) / 2) %>%
+  select(state, rev_enr, math_score, reading_score) %>%
+  group_by(state) %>%
+  summarize(avg_revenue = mean(rev_enr, na.rm = TRUE),
+            avg_math = mean(math_score, na.rm = TRUE),
+            avg_reading = mean(reading_score, na.rm = TRUE)) %>%
+  filter(!is.na(avg_revenue),
+         !is.na(avg_math),
+         !is.na(avg_reading)) %>%
+  mutate(state = stringr::str_to_title(state))
+
+
 
 ```
