@@ -12,6 +12,10 @@ library(magrittr)
 library(rio)
 library(here)
 library(ggrepel)
+library(maps)
+library(mapdata)
+library(rcartocolor)
+library(gghighlight)
 
 # import and tidy column names
 states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
@@ -19,7 +23,104 @@ states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
 
 ```
 
-```{r part1_ash}
+#### 1) In a new code chunk (separate from the chunk you used to import the data) reproduce the plot.
+
+```{r part1.1_ash}
+
+states_ash <- states_data %>%
+  select(state, year, federal_revenue:local_revenue) %>%
+  rename(Federal = federal_revenue,
+         State = state_revenue,
+         Local = local_revenue) %>%
+  mutate(state = stringr::str_to_title(state)) %>%
+  gather(key = type, value = revenue, Federal:Local) %>%
+  group_by(state, year, type) %>%
+  summarise(mean_revenue = mean(revenue, na.rm = TRUE))
+
+levels(as.factor(states_ash$state))
+
+states_ash[which(states_ash$state == "New_hampshire"), "state"] <- "New Hampshire"
+states_ash[which(states_ash$state == "New_jersey"), "state"] <- "New Jersey"
+states_ash[which(states_ash$state == "New_mexico"), "state"] <- "New Mexico"
+states_ash[which(states_ash$state == "New_york"), "state"] <- "New York"
+states_ash[which(states_ash$state == "North_carolina"), "state"] <- "North Carolina"
+states_ash[which(states_ash$state == "North_dakota"), "state"] <- "North Dakota"
+states_ash[which(states_ash$state == "Rhode_island"), "state"] <- "Rhode Island"
+states_ash[which(states_ash$state == "South_carolina"), "state"] <- "South Carolina"
+states_ash[which(states_ash$state == "South_dakota"), "state"] <- "South Dakota"
+states_ash[which(states_ash$state == "West_virginia"), "state"] <- "West Virginia"
+
+ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
+  geom_line() +
+  facet_wrap(~type) +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold")) +
+  labs(y = "Revenue",
+       x = "Year")
+ 
+```
+
+#### 2) Briefly Explain (outside the code chunk) a few things that could be done to improve the plot, and why. I’m less interested in the code here and more interested in why you feel the changes would improve the plot.
+
++ If our colleague wants to explore differences in revenue over time by *state*, I'm unsure why they would include the Department of Defense, Bureau of Indian Affairs, Virgin Islands (as well as US Virgin Islands?), Guam, etc. Not only that, but I have no idea what the following names refer to: As, Bl, Bie, Dd, Gu, Mp, Pr, and Vi. I would filter the dataset to only include the 50 US states. 
++ I'd also consider coloring the states by region (e.g., northwest, southwest, midwest, northeast, southest), rather than each state having its own color. 
++ Alternatively, we could just highlight and label the few states that stick out from the rest in each graph.
++ I'd transform the y-axis labels to enhance clarity.
++ I'd also ajust the x-axis to include a label every 5 years (e.g., 1995, 2000, 2005, 2010, 2015).
+
+#### 3) In a new code chunk, make at least 3 revisions to the plot that you suggested above.
+
+```{r part1.3_ash}
+
+region <- import("https://raw.githubusercontent.com/cphalpert/census-regions/master/us%20census%20bureau%20regions%20and%20divisions.csv") %>%
+  mutate(State = stringr::str_to_title(State)) %>%
+  rename(state = State)
+
+#Identify names to exclude in state column
+exclude <- c("American_samoa", "As", "Bi", "Bie", "Bureau_of_indian_affairs", "Bureau_of_indian_educatio", "Bureau_of_indian_education", "Commonwealth_of_marianas", "Dd", "Department_of_defense", "Department_of_defense_education_activity", "District_of_columbia", "Dod", "Dod_-_Domestic", "Dod_-_Foreign", "Dod_-_Overseas", "Dod_(Overseas_and_domestic_combined)", "Dod_domestic", "Dod_overseas", "Gu", "Guam", "Marianas", "Mp", "Northern_mariana_islands", "Northern_marianas", "Pr", "Puerto_rico", "U.s._Virgin_islands", "Vi", "Virgin_islands")
+
+states_ash %<>%
+  filter(!state %in% exclude)
+
+state_join <- left_join(states_ash, region, by = "state")
+
+state_join %<>%
+  group_by(state, type, Region, year) %>%
+  mutate(mean_revenue_mil = mean_revenue/1000000) %>%
+  select(-mean_revenue)
+
+ggplot(state_join, aes(x = year, y = mean_revenue_mil, group = state, color = Region)) +
+  geom_line(size = 0.75) +
+  facet_wrap(~type) +
+  scale_color_carto_d(palette = "Burg") +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold")) +
+  labs(y = "Revenue * $1,000,000",
+       x = "Year") +
+  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                     label = c("1995", "2000", "2005", "2010", "2015"),
+                     limits = c(1990, 2020))
+
+####################################################################
+
+states_ash %>%
+  group_by(state, year, type) %>%
+  mutate(mean_revenue_mil = mean_revenue/1000000) %>%
+  select(-mean_revenue) %>%
+  ggplot(aes(x = year, y = mean_revenue_mil, color = state)) +
+    geom_smooth(size = 0.85, se = FALSE) +
+    facet_wrap(~type) +
+    gghighlight(state == "California" |
+                state == "New York" |
+                state == "Texas") +
+    scale_color_carto_d(palette = "Burg") +
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold")) +
+    labs(y = "Revenue * $1,000,000",
+        x = "Year") +
+    scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                       label = c("1995", "2000", "2005", "2010", "2015"),
+                       limits = c(1990, 2020))
 
 ```
 
