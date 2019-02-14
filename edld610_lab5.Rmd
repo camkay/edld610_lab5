@@ -23,6 +23,7 @@ library(maps)
 library(mapdata)
 library(rcartocolor)
 library(gghighlight)
+library(cowplot)
 
 # import and tidy column names
 states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
@@ -126,7 +127,9 @@ state_join %>%
 
 ```
 
-```{r}
+It appears that coloring by region is pretty useless... so instead, I want to highlight the top 3 states in each condition (federal, state, local).
+
+```{r part1.4_ash}
 
 #####################################################
 #Plot 2: Highlighting top 3 states in each condition#
@@ -137,91 +140,107 @@ states_ash %>%
   mutate(mean_revenue_mil = mean_revenue/1000000) %>%
   select(-mean_revenue) %>%
   ggplot(aes(x = year, y = mean_revenue_mil, color = state)) +
-    geom_smooth(size = 0.85, se = FALSE) +
+    geom_smooth(size = 0.85, se = FALSE) + #when I use geom_line, it doesn't work as I intended
     facet_wrap(~type) +
     gghighlight(state == "California" |
                 state == "New York" |
                 state == "Texas") +
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
-    theme(axis.title = element_text(face = "bold")) +
+    theme(axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold")) +
     labs(y = "Revenue * $1,000,000",
-        x = "Year") +
+         x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020))
 
-#Top 3 federal: CA, TX, NY, and FL
-fig1_data <- states_ash %>%
+
+#################################
+#Alternative approach to Plot #2#
+#################################
+
+#Top 3 federal: CA, TX, NY
+fig1 <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "Federal") %>%
   group_by(state, year) %>%
   summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
-  arrange(desc(mean_rev_mil))
+  arrange(desc(mean_rev_mil)) %>%
+  ggplot(aes(x = year, y = mean_rev_mil, color = state)) +
+    geom_line(size = 0.75) +
+    gghighlight(state == "California" |
+                state == "New York" |
+                state == "Texas",
+                use_direct_label = TRUE) +
+    scale_color_carto_d(palette = "Burg") +
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold"),
+          plot.title = element_text(face = "bold", hjust = 0.5)) +
+    labs(title = "Federal Revenue",
+         y = "Revenue * $1,000,000",
+         x = "Year") +
+    scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                         label = c("1995", "2000", "2005", "2010", "2015"),
+                         limits = c(1990, 2020)) +
+    scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50),
+                       label = c("0", "10", "20", "30", "40", "50"),
+                       limits = c(0, 50))
 
-#Top 3 local: NY, CA, TX, IL
-fig2_data <- states_ash %>%
+#Top 3 local: NY, CA, TX
+fig2 <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "Local") %>%
   group_by(state, year) %>%
   summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
-  arrange(desc(mean_rev_mil))
+  arrange(desc(mean_rev_mil)) %>%
+  ggplot(aes(x = year, y = mean_rev_mil, color = state)) +
+    geom_line(size = 0.75) +
+    gghighlight(state == "California" |
+                state == "New York" |
+                state == "Texas",
+                use_direct_label = TRUE) +
+    scale_color_carto_d(palette = "Burg") +
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold"),
+          plot.title = element_text(face = "bold", hjust = 0.5)) +
+    labs(title = "Local Revenue",
+         y = "Revenue * $1,000,000",
+         x = "Year") +
+    scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                         label = c("1995", "2000", "2005", "2010", "2015"),
+                         limits = c(1990, 2020))
 
 #Top 3 state: CA, NY, TX
-fig3_data <- states_ash %>%
+fig3 <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "State") %>%
   group_by(state, year) %>%
   summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
-  arrange(desc(mean_rev_mil))
+  arrange(desc(mean_rev_mil)) %>%
+  ggplot(aes(x = year, y = mean_rev_mil, color = state)) +
+    geom_line(size = 0.75) +
+    gghighlight(state == "California" |
+                state == "New York" |
+                state == "Texas",
+                use_direct_label = TRUE) +
+    scale_color_carto_d(palette = "Burg") +
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold"),
+          plot.title = element_text(face = "bold", hjust = 0.5)) +
+    labs(title = "State Revenue",
+         y = "Revenue * $1,000,000",
+         x = "Year") +
+    scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                         label = c("1995", "2000", "2005", "2010", "2015"),
+                         limits = c(1990, 2020))
 
 rm(state_join)
 rm(states_ash)
 
-ggplot(fig1_data, aes(x = year, y = mean_rev_mil, color = state)) +
-  geom_line(size = 0.75) +
-  gghighlight(state == "California" |
-              state == "New York" |
-              state == "Texas",
-              use_direct_label = TRUE) +
-  scale_color_carto_d(palette = "Burg") +
-  theme_minimal() +
-  theme(axis.title = element_text(face = "bold")) +
-  labs(y = "Revenue * $1,000,000",
-       x = "Year") +
-  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
-                       label = c("1995", "2000", "2005", "2010", "2015"),
-                       limits = c(1990, 2020))
+Figure2 <- plot_grid(fig1, fig2, fig3, labels = c("", "", ""), align = "h", nrow = 1)
 
-ggplot(fig2_data, aes(x = year, y = mean_rev_mil, color = state)) +
-  geom_line(size = 0.75) +
-  gghighlight(state == "California" |
-              state == "New York" |
-              state == "Texas",
-              use_direct_label = TRUE) +
-  scale_color_carto_d(palette = "Burg") +
-  theme_minimal() +
-  theme(axis.title = element_text(face = "bold")) +
-  labs(y = "Revenue * $1,000,000",
-       x = "Year") +
-  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
-                       label = c("1995", "2000", "2005", "2010", "2015"),
-                       limits = c(1990, 2020))
-
-ggplot(fig3_data, aes(x = year, y = mean_rev_mil, color = state)) +
-  geom_line(size = 0.75) +
-  gghighlight(state == "California" |
-              state == "New York" |
-              state == "Texas",
-              use_direct_label = TRUE) +
-  scale_color_carto_d(palette = "Burg") +
-  theme_minimal() +
-  theme(axis.title = element_text(face = "bold")) +
-  labs(y = "Revenue * $1,000,000",
-       x = "Year") +
-  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
-                       label = c("1995", "2000", "2005", "2010", "2015"),
-                       limits = c(1990, 2020))
+Figure2
 
 ```
 
