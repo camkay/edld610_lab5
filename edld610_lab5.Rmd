@@ -2,7 +2,14 @@
 title: "edld610_lab5"
 author: "Cameron Kay and Ashley Miller"
 date: "2/13/2019"
-output: html_document
+output:
+  html_document:
+    theme: spacelab
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -57,7 +64,6 @@ ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
 
 #### 3) In a new code chunk, make at least 3 revisions to the plot that you suggested above.
 
-
 ```{r data_prep}
 
 #load data including info on state regions
@@ -89,12 +95,6 @@ states_ash[which(states_ash$state == "West_virginia"), "state"] <- "West Virgini
 #join datasets
 state_join <- left_join(states_ash, region, by = "state")
 
-#prep data for plot coloring states by region
-state_join %<>%
-  group_by(state, type, Region, year) %>%
-  mutate(mean_revenue_mil = mean_revenue/1000000) %>%
-  select(-mean_revenue)
-
 ```
 
 ```{r part1.3_ash}
@@ -103,17 +103,21 @@ state_join %<>%
 #Plot 1: revenue across time broken down by state but colored by region#
 ########################################################################
 
-ggplot(state_join, aes(x = year, y = mean_revenue_mil, group = state, color = Region)) +
-  geom_line(size = 0.75) +
-  facet_wrap(~type) +
-  scale_color_carto_d(palette = "Burg") +
-  theme_minimal() +
-  theme(axis.title = element_text(face = "bold")) +
-  labs(y = "Revenue * $1,000,000",
-       x = "Year") +
-  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
-                     label = c("1995", "2000", "2005", "2010", "2015"),
-                     limits = c(1990, 2020))
+state_join %>%
+  group_by(state, Region, year, type) %>%
+  mutate(mean_revenue_mil = mean_revenue/1000000) %>%
+  select(-mean_revenue) %>%
+  ggplot(aes(x = year, y = mean_revenue_mil, group = state, color = Region)) +
+    geom_line(size = 0.75) +
+    facet_wrap(~type) +
+    scale_color_carto_d(palette = "Burg") +
+    theme_minimal() +
+    theme(axis.title = element_text(face = "bold")) +
+    labs(y = "Revenue * $1,000,000",
+         x = "Year") +
+    scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                       label = c("1995", "2000", "2005", "2010", "2015"),
+                       limits = c(1990, 2020))
 
 #####################################################
 #Plot 2: Highlighting top 3 states in each condition#
@@ -137,6 +141,9 @@ states_ash %>%
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020))
+
+
+
 
 ```
 
