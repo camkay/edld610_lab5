@@ -37,19 +37,6 @@ states_ash <- states_data %>%
   group_by(state, year, type) %>%
   summarise(mean_revenue = mean(revenue, na.rm = TRUE))
 
-levels(as.factor(states_ash$state))
-
-states_ash[which(states_ash$state == "New_hampshire"), "state"] <- "New Hampshire"
-states_ash[which(states_ash$state == "New_jersey"), "state"] <- "New Jersey"
-states_ash[which(states_ash$state == "New_mexico"), "state"] <- "New Mexico"
-states_ash[which(states_ash$state == "New_york"), "state"] <- "New York"
-states_ash[which(states_ash$state == "North_carolina"), "state"] <- "North Carolina"
-states_ash[which(states_ash$state == "North_dakota"), "state"] <- "North Dakota"
-states_ash[which(states_ash$state == "Rhode_island"), "state"] <- "Rhode Island"
-states_ash[which(states_ash$state == "South_carolina"), "state"] <- "South Carolina"
-states_ash[which(states_ash$state == "South_dakota"), "state"] <- "South Dakota"
-states_ash[which(states_ash$state == "West_virginia"), "state"] <- "West Virginia"
-
 ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
   geom_line() +
   facet_wrap(~type) +
@@ -70,8 +57,10 @@ ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
 
 #### 3) In a new code chunk, make at least 3 revisions to the plot that you suggested above.
 
-```{r part1.3_ash}
 
+```{r data_prep}
+
+#load data including info on state regions
 region <- import("https://raw.githubusercontent.com/cphalpert/census-regions/master/us%20census%20bureau%20regions%20and%20divisions.csv") %>%
   mutate(State = stringr::str_to_title(State)) %>%
   rename(state = State)
@@ -79,15 +68,40 @@ region <- import("https://raw.githubusercontent.com/cphalpert/census-regions/mas
 #Identify names to exclude in state column
 exclude <- c("American_samoa", "As", "Bi", "Bie", "Bureau_of_indian_affairs", "Bureau_of_indian_educatio", "Bureau_of_indian_education", "Commonwealth_of_marianas", "Dd", "Department_of_defense", "Department_of_defense_education_activity", "District_of_columbia", "Dod", "Dod_-_Domestic", "Dod_-_Foreign", "Dod_-_Overseas", "Dod_(Overseas_and_domestic_combined)", "Dod_domestic", "Dod_overseas", "Gu", "Guam", "Marianas", "Mp", "Northern_mariana_islands", "Northern_marianas", "Pr", "Puerto_rico", "U.s._Virgin_islands", "Vi", "Virgin_islands")
 
+#filter out anything not a US state
 states_ash %<>%
   filter(!state %in% exclude)
 
+#Let's make sure our state IDs match prior to joining
+levels(as.factor(states_ash$state))
+
+states_ash[which(states_ash$state == "New_hampshire"), "state"] <- "New Hampshire"
+states_ash[which(states_ash$state == "New_jersey"), "state"] <- "New Jersey"
+states_ash[which(states_ash$state == "New_mexico"), "state"] <- "New Mexico"
+states_ash[which(states_ash$state == "New_york"), "state"] <- "New York"
+states_ash[which(states_ash$state == "North_carolina"), "state"] <- "North Carolina"
+states_ash[which(states_ash$state == "North_dakota"), "state"] <- "North Dakota"
+states_ash[which(states_ash$state == "Rhode_island"), "state"] <- "Rhode Island"
+states_ash[which(states_ash$state == "South_carolina"), "state"] <- "South Carolina"
+states_ash[which(states_ash$state == "South_dakota"), "state"] <- "South Dakota"
+states_ash[which(states_ash$state == "West_virginia"), "state"] <- "West Virginia"
+
+#join datasets
 state_join <- left_join(states_ash, region, by = "state")
 
+#prep data for plot coloring states by region
 state_join %<>%
   group_by(state, type, Region, year) %>%
   mutate(mean_revenue_mil = mean_revenue/1000000) %>%
   select(-mean_revenue)
+
+```
+
+```{r part1.3_ash}
+
+########################################################################
+#Plot 1: revenue across time broken down by state but colored by region#
+########################################################################
 
 ggplot(state_join, aes(x = year, y = mean_revenue_mil, group = state, color = Region)) +
   geom_line(size = 0.75) +
@@ -101,7 +115,9 @@ ggplot(state_join, aes(x = year, y = mean_revenue_mil, group = state, color = Re
                      label = c("1995", "2000", "2005", "2010", "2015"),
                      limits = c(1990, 2020))
 
-####################################################################
+#####################################################
+#Plot 2: Highlighting top 3 states in each condition#
+#####################################################
 
 states_ash %>%
   group_by(state, year, type) %>%
