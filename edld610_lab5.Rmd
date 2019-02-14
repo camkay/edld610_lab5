@@ -30,6 +30,8 @@ states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
 
 ```
 
+### Part 1
+
 #### 1) In a new code chunk (separate from the chunk you used to import the data) reproduce the plot.
 
 ```{r part1.1_ash}
@@ -95,6 +97,9 @@ states_ash[which(states_ash$state == "West_virginia"), "state"] <- "West Virgini
 #join datasets
 state_join <- left_join(states_ash, region, by = "state")
 
+rm(region)
+rm(states_data)
+
 ```
 
 ```{r part1.3_ash}
@@ -119,6 +124,10 @@ state_join %>%
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020))
 
+```
+
+```{r}
+
 #####################################################
 #Plot 2: Highlighting top 3 states in each condition#
 #####################################################
@@ -142,10 +151,83 @@ states_ash %>%
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020))
 
+#Top 3 federal: CA, TX, NY, and FL
+fig1_data <- states_ash %>%
+  mutate(rev_mil = mean_revenue/1000000) %>%
+  filter(type == "Federal") %>%
+  group_by(state, year) %>%
+  summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
+  arrange(desc(mean_rev_mil))
 
+#Top 3 local: NY, CA, TX, IL
+fig2_data <- states_ash %>%
+  mutate(rev_mil = mean_revenue/1000000) %>%
+  filter(type == "Local") %>%
+  group_by(state, year) %>%
+  summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
+  arrange(desc(mean_rev_mil))
 
+#Top 3 state: CA, NY, TX
+fig3_data <- states_ash %>%
+  mutate(rev_mil = mean_revenue/1000000) %>%
+  filter(type == "State") %>%
+  group_by(state, year) %>%
+  summarise(mean_rev_mil = mean(rev_mil, na.rm = TRUE)) %>%
+  arrange(desc(mean_rev_mil))
+
+rm(state_join)
+rm(states_ash)
+
+ggplot(fig1_data, aes(x = year, y = mean_rev_mil, color = state)) +
+  geom_line(size = 0.75) +
+  gghighlight(state == "California" |
+              state == "New York" |
+              state == "Texas",
+              use_direct_label = TRUE) +
+  scale_color_carto_d(palette = "Burg") +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold")) +
+  labs(y = "Revenue * $1,000,000",
+       x = "Year") +
+  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                       label = c("1995", "2000", "2005", "2010", "2015"),
+                       limits = c(1990, 2020))
+
+ggplot(fig2_data, aes(x = year, y = mean_rev_mil, color = state)) +
+  geom_line(size = 0.75) +
+  gghighlight(state == "California" |
+              state == "New York" |
+              state == "Texas",
+              use_direct_label = TRUE) +
+  scale_color_carto_d(palette = "Burg") +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold")) +
+  labs(y = "Revenue * $1,000,000",
+       x = "Year") +
+  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                       label = c("1995", "2000", "2005", "2010", "2015"),
+                       limits = c(1990, 2020))
+
+ggplot(fig3_data, aes(x = year, y = mean_rev_mil, color = state)) +
+  geom_line(size = 0.75) +
+  gghighlight(state == "California" |
+              state == "New York" |
+              state == "Texas",
+              use_direct_label = TRUE) +
+  scale_color_carto_d(palette = "Burg") +
+  theme_minimal() +
+  theme(axis.title = element_text(face = "bold")) +
+  labs(y = "Revenue * $1,000,000",
+       x = "Year") +
+  scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
+                       label = c("1995", "2000", "2005", "2010", "2015"),
+                       limits = c(1990, 2020))
 
 ```
+
+### Part 2 (Cam)
+
+#### Help your colleague reproduce the plot to highlight the five highest and lowest revenue states, after accounting for enrollment. Make any other modifications you feel would help aid communication.
 
 ```{r part2_cam, fig.width = 12, fig.asp = .4}
 # prepare data
