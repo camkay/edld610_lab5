@@ -82,7 +82,7 @@ states_ash %<>%
   filter(!state %in% exclude)
 
 #Let's make sure our state IDs match prior to joining
-levels(as.factor(states_ash$state))
+#levels(as.factor(states_ash$state))
 
 states_ash[which(states_ash$state == "New_hampshire"), "state"] <- "New Hampshire"
 states_ash[which(states_ash$state == "New_jersey"), "state"] <- "New Jersey"
@@ -101,6 +101,7 @@ state_join <- left_join(states_ash, region, by = "state")
 rm(region)
 rm(states_data)
 
+
 ```
 
 ```{r part1.3_ash}
@@ -118,16 +119,18 @@ state_join %>%
     facet_wrap(~type) +
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
-    theme(axis.title = element_text(face = "bold")) +
-    labs(y = "Revenue * $1,000,000",
+    theme(axis.title = element_text(face = "bold"),
+          strip.text = element_text(face = "bold")) +
+    labs(title = "Figure 1. Differences in Federal, Local, and State Revenue Over Time by State and Region",
+         y = "Revenue * $1,000,000",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                        label = c("1995", "2000", "2005", "2010", "2015"),
-                       limits = c(1990, 2020))
+                       limits = c(1990, 2020)) 
 
 ```
 
-It appears that coloring by region is pretty useless... so instead, I want to highlight the top 3 states in each condition (federal, state, local).
+It appears that coloring by region is pretty useless... so instead, I'd probably try to highlight the top 3 states in each condition (federal, state, local).
 
 ```{r part1.4_ash}
 
@@ -140,28 +143,34 @@ states_ash %>%
   mutate(mean_revenue_mil = mean_revenue/1000000) %>%
   select(-mean_revenue) %>%
   ggplot(aes(x = year, y = mean_revenue_mil, color = state)) +
-    geom_smooth(size = 0.85, se = FALSE) + #when I use geom_line, it doesn't work as I intended
+    geom_line(size = 0.85, se = FALSE) + #I don't understand why only the highlighted lines look right? 
     facet_wrap(~type) +
     gghighlight(state == "California" |
                 state == "New York" |
-                state == "Texas") +
+                state == "Texas",
+                use_direct_label = TRUE) + #Not working???
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold"),
           strip.text = element_text(face = "bold")) +
-    labs(y = "Revenue * $1,000,000",
+    labs(title = "Figure 2. Differences in Federal, Local, and State Revenue Over Time by State",
+         subtitle = "The three states with the highest total revenue are highlighted: California (light pink), New York (medium/hot pink), and Texas (dark pink/purple)",
+         y = "Revenue * $1,000,000",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020))
 
+```
+
+```{r part1.5ash}
 
 #################################
 #Alternative approach to Plot #2#
 #################################
 
 #Top 3 federal: CA, TX, NY
-fig1 <- states_ash %>%
+fig1a <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "Federal") %>%
   group_by(state, year) %>%
@@ -172,12 +181,14 @@ fig1 <- states_ash %>%
     gghighlight(state == "California" |
                 state == "New York" |
                 state == "Texas",
-                use_direct_label = TRUE) +
+                use_direct_label = TRUE) + #not working?
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold"),
-          plot.title = element_text(face = "bold", hjust = 0.5)) +
-    labs(title = "Federal Revenue",
+          plot.title = element_text(face = "bold", vjust = 1.5),
+          plot.subtitle = element_text(face = "bold", hjust = 0.5)) +
+    labs(title = "Figure 1. Differences in Federal, Local, and State Revenue Over Time by State",
+         subtitle = "Federal",
          y = "Revenue * $1,000,000",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
@@ -185,10 +196,11 @@ fig1 <- states_ash %>%
                          limits = c(1990, 2020)) +
     scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50),
                        label = c("0", "10", "20", "30", "40", "50"),
-                       limits = c(0, 50))
+                       limits = c(0, 50)) + theme(plot.title = element_text(face = "bold", 
+    vjust = 1.5))
 
 #Top 3 local: NY, CA, TX
-fig2 <- states_ash %>%
+fig1b <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "Local") %>%
   group_by(state, year) %>%
@@ -199,20 +211,23 @@ fig2 <- states_ash %>%
     gghighlight(state == "California" |
                 state == "New York" |
                 state == "Texas",
-                use_direct_label = TRUE) +
+                use_direct_label = TRUE) + #not working?
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold"),
-          plot.title = element_text(face = "bold", hjust = 0.5)) +
-    labs(title = "Local Revenue",
-         y = "Revenue * $1,000,000",
+          plot.subtitle = element_text(face = "bold", hjust = 0.5)) +
+    labs(subtitle = "Local",
+         y = "",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                          label = c("1995", "2000", "2005", "2010", "2015"),
-                         limits = c(1990, 2020))
+                         limits = c(1990, 2020)) +
+    scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50),
+                         label = c("0", "10", "20", "30", "40", "50"),
+                         limits = c(0, 50))
 
 #Top 3 state: CA, NY, TX
-fig3 <- states_ash %>%
+fig1c <- states_ash %>%
   mutate(rev_mil = mean_revenue/1000000) %>%
   filter(type == "State") %>%
   group_by(state, year) %>%
@@ -223,24 +238,21 @@ fig3 <- states_ash %>%
     gghighlight(state == "California" |
                 state == "New York" |
                 state == "Texas",
-                use_direct_label = TRUE) +
+                use_direct_label = TRUE) + #not working?
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold"),
-          plot.title = element_text(face = "bold", hjust = 0.5)) +
-    labs(title = "State Revenue",
-         y = "Revenue * $1,000,000",
+          plot.subtitle = element_text(face = "bold", hjust = 0.5)) +
+    labs(subtitle = "State",
+         y = "",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                          label = c("1995", "2000", "2005", "2010", "2015"),
                          limits = c(1990, 2020))
 
-rm(state_join)
-rm(states_ash)
+Figure1 <- plot_grid(fig1a, fig1b, fig1c, labels = c("", "", ""), align = "h", nrow = 1)
 
-Figure2 <- plot_grid(fig1, fig2, fig3, labels = c("", "", ""), align = "h", nrow = 1)
-
-Figure2
+Figure1
 
 ```
 
