@@ -43,7 +43,7 @@ states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
 
 ```
 
-### Part 1
+### Part 1 (Ash)
 
 #### 1) In a new code chunk (separate from the chunk you used to import the data) reproduce the plot.
 
