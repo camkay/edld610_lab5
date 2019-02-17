@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       warning = FALSE,
                       fig.width = 8.5,
-                      fig.height = 4.0)
+                      fig.height = 5.0)
 
 # load packages
 library(tidyverse)
@@ -43,7 +43,7 @@ states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
 
 #### 1) In a new code chunk (separate from the chunk you used to import the data) reproduce the plot.
 
-```{r part1.1_ash, }
+```{r part1.1_ash}
 
 states_ash <- states_data %>%
   select(state, year, federal_revenue:local_revenue) %>%
@@ -110,33 +110,51 @@ state_join <- left_join(states_ash, region, by = "state")
 
 ```{r part1.3_ash}
 
-########################################################################
-#Plot 1: revenue across time broken down by state but colored by region#
-########################################################################
+#############################################################
+#Plot 1: revenue across time broken down by region within US#
+#############################################################
 
-state_join %>%
-  group_by(state, Region, year, type) %>%
-  mutate(mean_revenue_mil = mean_revenue/1000000) %>%
-  select(-mean_revenue) %>%
-  ggplot(aes(x = year, y = mean_revenue_mil, group = state, color = Region)) +
-    geom_line(size = 0.75) +
+fig1 <- state_join %>%
+  group_by(Region, year, type) %>%
+  summarize(m_rev = mean(mean_revenue)) %>%
+  mutate(mean_revenue_mil = m_rev/1000000) %>%
+  select(-m_rev) %>%
+  ggplot(aes(x = year, y = mean_revenue_mil, color = Region)) +
+    geom_line(size = 0.85) +
     facet_wrap(~type) +
     scale_color_carto_d(palette = "Burg") +
     theme_minimal() +
     theme(axis.title = element_text(face = "bold"),
           strip.text = element_text(face = "bold")) +
-    labs(title = "Figure 1. Differences in Federal, Local, and State Revenue Over Time by State and Region",
+    labs(title = "Figure 1. Differences in Federal, Local, and State Revenue Over Time by US State Region",
          y = "Revenue * $1,000,000",
          x = "Year") +
     scale_x_continuous(breaks = c(1995, 2000, 2005, 2010, 2015),
                        label = c("1995", "2000", "2005", "2010", "2015"),
                        limits = c(1990, 2020)) 
 
+
+fig1 + theme(panel.grid.major = element_line(colour = "gray30"), 
+          panel.grid.minor = element_line(colour = "gray30"), 
+          axis.text = element_text(colour = "gray80"), 
+          axis.text.x = element_text(colour = "gray80"), 
+          axis.text.y = element_text(colour = "gray80"),
+          axis.title = element_text(colour = "gray80"),
+          legend.text = element_text(colour = "gray80"), 
+          legend.title = element_text(colour = "gray80"), 
+          strip.text = element_text(colour = "gray80"),
+          panel.background = element_rect(fill = "gray10"), 
+          plot.background = element_rect(fill = "gray10"), 
+          legend.background = element_rect(fill = NA, color = NA), 
+          plot.margin = margin(10, 10, b = 20, 10),
+          plot.caption = element_text(colour = "gray80", vjust = 1), 
+          plot.title = element_text(colour = "gray80"))
+
 ```
 
-It appears that coloring by region is pretty useless... so instead, I'd probably try to highlight the top 3 states in each condition (federal, state, local).
+```{r part1.4_ash, include=FALSE, eval = FALSE}
 
-```{r part1.4_ash}
+#Alternatively, I could try to highlight the top 3 states in each condition (federal, state, local).
 
 #####################################################
 #Plot 2: Highlighting top 3 states in each condition#
@@ -167,7 +185,7 @@ states_ash %>%
 
 ```
 
-```{r part1.5ash}
+```{r part1.5ash, include=FALSE, eval = FALSE}
 
 #################################
 #Alternative approach to Plot #2#
