@@ -32,6 +32,10 @@ library(mapdata)
 library(rcartocolor)
 library(gghighlight)
 library(cowplot)
+library(knitr)
+library(png)
+
+img1_path <- "/Users/amiller/Documents/Data Science/Winter 2019/edld610_lab5/ReplicatedPlot.png"
 
 # import and tidy column names
 states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
@@ -55,20 +59,24 @@ states_ash <- states_data %>%
   group_by(state, year, type) %>%
   summarise(mean_revenue = mean(revenue, na.rm = TRUE))
 
-ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
+plot1 <- ggplot(states_ash, aes(x = year, y = mean_revenue, color = state)) +
   geom_line() +
   facet_wrap(~type) +
   theme_minimal() +
   theme(axis.title = element_text(face = "bold")) +
   labs(y = "Revenue",
        x = "Year")
- 
+```
+
+```{r part1.3_replicat, out.width = "95%", fig.align='center', echo=FALSE}
+#note that the image (plot1) is too large to properly knit; so I took a screenshot of the final product and loaded into the document that way
+include_graphics(img1_path) 
 ```
 
 #### 2) Briefly Explain (outside the code chunk) a few things that could be done to improve the plot, and why. I’m less interested in the code here and more interested in why you feel the changes would improve the plot.
 
 + If our colleague wants to explore differences in revenue over time by *state*, I'm unsure why they would include the Department of Defense, Bureau of Indian Affairs, Virgin Islands (as well as US Virgin Islands?), Guam, etc. Not only that, but I have no idea what the following names refer to: As, Bl, Bie, Dd, Gu, Mp, Pr, and Vi. I would filter the dataset to only include the 50 US states. 
-+ I'd also consider coloring the states by region (e.g., northwest, southwest, midwest, northeast, southest), rather than each state having its own color. 
++ I'd also consider grouping/coloring the states by region (e.g., northwest, southwest, midwest, northeast, southest).
 + Alternatively, we could just highlight and label the few states that stick out from the rest in each graph.
 + I'd transform the y-axis labels to enhance clarity.
 + I'd also ajust the x-axis to include a label every 5 years (e.g., 1995, 2000, 2005, 2010, 2015).
@@ -109,7 +117,6 @@ state_join <- left_join(states_ash, region, by = "state")
 ```
 
 ```{r part1.3_ash}
-
 #############################################################
 #Plot 1: revenue across time broken down by region within US#
 #############################################################
