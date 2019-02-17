@@ -35,7 +35,7 @@ library(cowplot)
 library(knitr)
 library(png)
 
-img1_path <- "/Users/amiller/Documents/Data Science/Winter 2019/edld610_lab5/ReplicatedPlot.png"
+img1_path <- here("ReplicatedPlot.png")
 
 # import and tidy column names
 states_data <- import(here("data/states_all.csv"), setclass = "tibble") %>%
@@ -336,12 +336,12 @@ ggplot(cam_data, aes(x = avg_revenue, y = avg_score)) +
        x = "State revenue per student",
        caption = "Data from www.kaggle.com/noriuk/us-education-datasets-unification-project") +
   theme_bw() +
-  theme(title = element_text(face = "bold", size = 15),
-        axis.title.x = element_text(face = "bold", size = 15),
-        axis.title.y = element_text(face = "bold", size = 15),
+  theme(title = element_text(face = "bold", size = 18),
+        axis.title.x = element_text(face = "bold", size = 18),
+        axis.title.y = element_text(face = "bold", size = 18),
         strip.background = element_rect(fill = "black"),
-        strip.text = element_text(face = "bold", color = "white", size = 15),
-        axis.text = element_text(size = 15)
+        strip.text = element_text(face = "bold", color = "white", size = 18),
+        axis.text = element_text(size = 18)
         )
   
 ```
